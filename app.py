@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
 import os
@@ -16,44 +16,55 @@ HTML_CODE = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
-    <div class="bg-gray-800 rounded-xl shadow-lg p-6 w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-6 text-red-500"><i class="fab fa-youtube"></i> YT Downloader App</h1>
-        <input type="text" id="url" placeholder="Paste YouTube Link..." class="w-full p-3 rounded bg-gray-700 text-white mb-4 outline-none border border-gray-600 focus:border-red-500">
-        <button onclick="getLinks()" id="btn" class="w-full bg-red-600 hover:bg-red-700 p-3 rounded font-bold transition flex justify-center items-center gap-2">
+<body class="flex items-center justify-center min-h-screen p-4" style="background-color: #111827; color: white; font-family: sans-serif;">
+    <div class="rounded-xl shadow-lg p-6 w-full max-w-md" style="background-color: #1f2937; padding: 24px; border-radius: 12px; width: 100%; max-width: 450px; margin: 0 auto; box-sizing: border-box; border: 1px solid #374151;">
+        <h1 class="text-2xl font-bold text-center mb-6" style="text-align: center; color: #ef4444; font-size: 24px; margin-bottom: 20px;"><i class="fab fa-youtube"></i> YT Downloader App</h1>
+        
+        <input type="text" id="url" placeholder="Paste YouTube Link here..." style="width: 100%; padding: 14px; margin-bottom: 16px; background: #374151; color: white; border: 1px solid #4b5563; border-radius: 8px; box-sizing: border-box; font-size: 16px;">
+        
+        <button onclick="getLinks()" id="btn" style="width: 100%; background: #dc2626; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
             <i class="fas fa-search"></i> Get Download Links
         </button>
-        <div id="loading" class="hidden text-center mt-6 text-gray-400"><i class="fas fa-spinner fa-spin text-3xl mb-2 text-red-500"></i><p>Extracting links... Please wait.</p></div>
-        <div id="result" class="hidden mt-6 space-y-4">
-            <div class="bg-gray-700 p-3 rounded border border-gray-600"><p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Video Title</p><p id="title" class="font-semibold text-sm"></p></div>
-            <a id="vid" target="_blank" class="block text-center bg-blue-600 hover:bg-blue-700 p-3 rounded font-bold transition"><i class="fas fa-video mr-2"></i> Download MP4 Video</a>
-            <a id="aud" target="_blank" class="block text-center bg-purple-600 hover:bg-purple-700 p-3 rounded font-bold transition"><i class="fas fa-music mr-2"></i> Download Audio Only</a>
+        
+        <div id="loading" style="display: none; text-align: center; margin-top: 24px; color: #9ca3af;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 30px; color: #ef4444; margin-bottom: 10px;"></i>
+            <p>Extracting links... Please wait.</p>
         </div>
-        <p id="error" class="hidden mt-4 bg-red-500/20 border border-red-500/50 text-red-400 p-3 rounded text-sm text-center"></p>
+        
+        <div id="result" style="display: none; margin-top: 24px;">
+            <div style="background: #374151; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #4b5563;">
+                <p style="font-size: 12px; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px;">Video Title</p>
+                <p id="title" style="font-weight: bold; line-height: 1.4;"></p>
+            </div>
+            <a id="vid" target="_blank" style="display: block; width: 100%; text-align: center; background: #2563eb; color: white; padding: 14px; border-radius: 8px; text-decoration: none; margin-bottom: 12px; box-sizing: border-box; font-weight: bold;"><i class="fas fa-video mr-2"></i> Download MP4 Video</a>
+            <a id="aud" target="_blank" style="display: block; width: 100%; text-align: center; background: #9333ea; color: white; padding: 14px; border-radius: 8px; text-decoration: none; box-sizing: border-box; font-weight: bold;"><i class="fas fa-music mr-2"></i> Download Audio Only</a>
+        </div>
+        
+        <p id="error" style="display: none; color: #fca5a5; background: rgba(239,68,68,0.2); padding: 12px; border-radius: 8px; margin-top: 16px; text-align: center; border: 1px solid #f87171;"></p>
     </div>
+
     <script>
         async function getLinks() {
             const url = document.getElementById('url').value;
             if(!url) return;
-            document.getElementById('btn').disabled = true;
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('result').classList.add('hidden');
-            document.getElementById('error').classList.add('hidden');
+            document.getElementById('btn').style.opacity = '0.5';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
             try {
-                // Local URL အစား အလိုအလျောက်ချိတ်ဆက်မည့် Relative URL ပြောင်းထားပါသည်
                 const res = await fetch('/api/download?url=' + encodeURIComponent(url));
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
                 document.getElementById('title').innerText = data.title;
                 document.getElementById('vid').href = data.video_url || '#';
                 document.getElementById('aud').href = data.audio_url || '#';
-                document.getElementById('result').classList.remove('hidden');
+                document.getElementById('result').style.display = 'block';
             } catch(e) {
                 document.getElementById('error').innerText = "Error: " + e.message;
-                document.getElementById('error').classList.remove('hidden');
+                document.getElementById('error').style.display = 'block';
             } finally {
-                document.getElementById('btn').disabled = false;
-                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('btn').style.opacity = '1';
+                document.getElementById('loading').style.display = 'none';
             }
         }
     </script>
@@ -72,7 +83,8 @@ def get_download_links(url):
 
 @app.route('/')
 def home():
-    return render_template_string(HTML_CODE)
+    # render_template_string မသုံးတော့ဘဲ တိုက်ရိုက်ထုတ်ပြပါမယ်
+    return HTML_CODE
 
 @app.route('/api/download')
 def download():
