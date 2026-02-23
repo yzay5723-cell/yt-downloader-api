@@ -136,21 +136,3 @@ def download():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-
-@app.route('/')
-def home():
-    return HTML_CODE
-
-@app.route('/api/download')
-def download():
-    url = request.args.get('url')
-    if not url: return jsonify({"error": "No URL provided"}), 400
-    try:
-        return jsonify(get_download_links(url))
-    except Exception as e:
-        # Error အသေးစိတ်ကို UI မှာ ပြဖို့အတွက်ပါ
-        return jsonify({"error": str(e)}), 400
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
